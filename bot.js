@@ -100,10 +100,22 @@ class LuisBot {
     }
 
     static async MostrarCarruselMemorias(turnContext){
-// await turnContext.sendActivities([
-//     {type:'typing'},
-//     {type:'delay', value: 1500}
-// ])
+
+        await turnContext.sendActivities([
+            {type: 'typing'},
+            {type: 'delay', value: 2000},
+            {type: 'message', text: '🔍🔎 🔍🔎 Deja buscar a ver si encuentro algo en mi biblioteca de registros... 🔍🔎 🔍🔎'},
+            {type: 'typing'},
+            {type: 'delay', value: 3000}
+        ])
+
+        await turnContext.sendActivities([
+            {type: 'typing'},
+            {type: 'delay', value: 1500},
+            {type: 'message', text: 'Buscando en mis registros... He encontrado los siguientes reportes anuales...  📄 📑 📊'},
+            {type: 'typing'},
+            {type: 'delay', value: 3000}
+        ])
 
         await turnContext.sendActivity({
             text: 'Selecciona un año:',
@@ -116,6 +128,8 @@ class LuisBot {
             attachmentLayout: AttachmentLayoutTypes.Carousel
 
         });
+
+        await LuisBot.AyudarenAlgoMas(turnContext)
     }
 
     static MemoriaCard(id,url) {
@@ -133,11 +147,19 @@ class LuisBot {
         );
     }
 
+    static async AyudarenAlgoMas(turnContext){
+        await turnContext.sendActivities([
+            {type: 'typing'},
+            {type: 'delay', value: 1500},
+            {type: 'message', text: 'Te puedo ayudar en algo más???... 👀 '}
+        ])
+    }
+
     static async MenuOpciones(turnContext){
 
         const buttons = [
             { type: ActionTypes.ImBack, title: '1. Mostrar ImBack', value: 'You can All hear me! Shout out loud' },
-            { type: ActionTypes.PostBack, title: '2. Mostrar PostBack', value: 'Shhhh! My bot friend hears me. Much Quieter' },
+            { type: ActionTypes.PostBack, title: '2. Ver Reportes Anuales', value: 'Reporte' },
             { type: ActionTypes.OpenUrl, title: '3. Mostrar OpenUrl', value: 'https://www.google.cl' },
             { type: ActionTypes.Call, title: '4. Mostrar Call', value: 'tel:123123123123' },
             { type: ActionTypes.PlayAudio, title: '5. Mostrar PlayAudio', value: '5' },
