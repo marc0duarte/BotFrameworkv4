@@ -52,15 +52,22 @@ class LuisBot {
             else if (topIntent.intent === 'Memoria'){
                 await LuisBot.MostrarCarruselMemorias(turnContext);
             }
-            else if (topIntent.intent !== 'None') {
-                await turnContext.sendActivity(`LUIS Top Scoring Intent: ${ topIntent.intent }, Score: ${ topIntent.score }`);
-            } else {
+            else if (topIntent.intent === 'Video'){
+                await LuisBot.GenerarVideoCard(turnContext);
+            }
+            else if(topIntent.intent === 'ListaContacto'){
+                await LuisBot.CarruselListaContactos(turnContext);
+            }
+            else if(topIntent.intent === 'Opciones'){
+                await LuisBot.MenuOpciones(turnContext);
+            }
+            else {
                 // If the top scoring intent was "None" tell the user no valid intents were found and provide help.
-                await turnContext.sendActivity(`No LUIS intents were found.
-                                                \nThis sample is about identifying two user intents:
-                                                \n - 'Calendar.Add'
-                                                \n - 'Calendar.Find'
-                                                \nTry typing 'Add Event' or 'Show me tomorrow'.`);
+                await turnContext.sendActivity(`No pude entender lo que me preguntas... 😰😰😰
+                                                \n 
+                                                \nTen paciencia... me estan enseñando cosas nuevas todos los días para poder entenderte mejor.😉😉`);
+            
+                await LuisBot.AyudarenAlgoMas(turnContext);
             }
         } else if (turnContext.activity.type === ActivityTypes.ConversationUpdate &&
             turnContext.activity.recipient.id !== turnContext.activity.membersAdded[0].id) {
@@ -72,7 +79,48 @@ class LuisBot {
         }
     }
 
-    // Manages the conversation flow for filling out the user's profile.
+    static async GenerarVideoCard(turnContext){
+
+        await turnContext.sendActivities(
+            [
+                {type: 'typing'},
+                {type: 'delay', value: 2000},
+                {type: 'message', text: 'Por el momento solo tengo información de un video... Estoy recopilando más videos para poder presentarte!!!'},
+                {type: 'delay', value: 3000},
+                {type: 'message', text: 'Te voy a presentar información sobre un campeonato de proyectos innovadores... Te va a encantar ❤️'},
+                {type: 'typing'},
+                {type: 'delay', value: 4000},
+
+            ]
+        )
+
+        const video = CardFactory.videoCard(
+            'Campeonato Mundial de IC18 World Championship', 
+            [{url: 'https://sec.ch9.ms/ch9/783d/d57287a5-185f-4df9-aa08-fcab699a783d/IC18WorldChampionshipIntro2.mp4'}],
+            [{
+                type: 'openUrl',
+                title: 'Conocer más',
+                value: 'https://channel9.msdn.com/Events/Imagine-Cup/World-Finals-2018/2018-Imagine-Cup-World-Championship-Intro'
+            }],
+            {
+                subtitle: 'by Microsoft',
+                text: 'Microsoft\'s Imagine Cup es un evento para estudiantes innovadores alrededor del mundo, con el objetivo de crear proyectos innovadores y que tragan beneficio a la comunidad.',
+            }
+            )
+            
+
+        await turnContext.sendActivity(
+            {
+                attachments: [video]
+            }
+        )
+
+        await LuisBot.AyudarenAlgoMas(turnContext)
+
+    }
+
+
+
     static async EnviarSaludos(turnContext) {
 
         await turnContext.sendActivities([
@@ -97,6 +145,103 @@ class LuisBot {
         ]);
 
         await LuisBot.MenuOpciones(turnContext);
+    }
+
+    static async CarruselListaContactos(turnContext){
+
+
+        await turnContext.sendActivity({
+            text: 'Estos son los miembros de la empresa:',
+            attachments: [LuisBot.CrearTarjetaListaContacto(),
+                          LuisBot.CrearTarjetaListaContacto(),
+                          LuisBot.CrearTarjetaListaContacto(),
+                          LuisBot.CrearTarjetaListaContacto(),
+                          LuisBot.CrearTarjetaListaContacto()                         
+         ],
+            attachmentLayout: AttachmentLayoutTypes.Carousel
+
+        });
+
+        await LuisBot.AyudarenAlgoMas(turnContext)
+
+    }
+
+    static CrearTarjetaListaContacto(){
+        return CardFactory.adaptiveCard({
+            "type": "AdaptiveCard",
+            "body": [
+                {
+                    "type": "Container",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "size": "Medium",
+                            "weight": "Bolder",
+                            "text": "Tarjeta de Contacto"
+                        },
+                        {
+                            "type": "ColumnSet",
+                            "columns": [
+                                {
+                                    "type": "Column",
+                                    "items": [
+                                        {
+                                            "type": "Image",
+                                            "style": "Person",
+                                            "url": "https://pbs.twimg.com/profile_images/3647943215/d7f12830b3c17a5a9e4afcc370e3a37e_400x400.jpeg",
+                                            "size": "Small"
+                                        }
+                                    ],
+                                    "width": "auto"
+                                },
+                                {
+                                    "type": "Column",
+                                    "items": [
+                                        {
+                                            "type": "TextBlock",
+                                            "weight": "Bolder",
+                                            "text": "Matt Hidinger",
+                                            "wrap": true
+                                        },
+                                        {
+                                            "type": "TextBlock",
+                                            "spacing": "None",
+                                            "text": "Miembro de la empresa desde el {{DATE(2017-02-14T06:08:39Z,SHORT)}}",
+                                            "isSubtle": true,
+                                            "wrap": true
+                                        }
+                                    ],
+                                    "width": "stretch"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Container",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Telefono: [9821098398](tel:9821098398)",
+                            "wrap": true
+                        },
+                        {
+                            "type": "TextBlock",
+                            "horizontalAlignment": "Left",
+                            "text": "Correo Electrónico: mhidinger@empresa.com"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Departamento: Finanzas"
+                        }
+                    ]
+                }
+            ],
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "version": "1.0"
+        }
+        ) 
+
     }
 
     static async MostrarCarruselMemorias(turnContext){
@@ -158,13 +303,11 @@ class LuisBot {
     static async MenuOpciones(turnContext){
 
         const buttons = [
-            { type: ActionTypes.ImBack, title: '1. Mostrar ImBack', value: 'You can All hear me! Shout out loud' },
+            { type: ActionTypes.ImBack, title: '1. Mostrar Video', value: 'Video' },
             { type: ActionTypes.PostBack, title: '2. Ver Reportes Anuales', value: 'Reporte' },
-            { type: ActionTypes.OpenUrl, title: '3. Mostrar OpenUrl', value: 'https://www.google.cl' },
-            { type: ActionTypes.Call, title: '4. Mostrar Call', value: 'tel:123123123123' },
-            { type: ActionTypes.PlayAudio, title: '5. Mostrar PlayAudio', value: '5' },
-            { type: ActionTypes.PlayVideo, title: '6. Mostrar PlayVideo', value: 'https://youtu.be/ltYUH6fEYdE' },
-            { type: ActionTypes.ShowImage, title: '7. Mostrar ShowImage', value: 'https://www.debate.com.mx/__export/1523551113292/sites/debate/img/2018/04/12/meme.png_1902800913.png' }
+            { type: ActionTypes.OpenUrl, title: '3. Mostrar Página de la empresa', value: 'https://www.falabella.cl' },
+            { type: ActionTypes.PostBack, title: '4. Ver Lista de Contactos ', value: 'Lista de Contacto' },
+            { type: ActionTypes.Call, title: '5. Llamar a Mesa de Ayuda', value: 'tel:123123123123' }
         ];
         const card = CardFactory.heroCard('Opciones disponibles', undefined,
         buttons, { text: 'Selecciona la opción que desees' });
@@ -184,80 +327,6 @@ class LuisBot {
 
         await turnContext.sendActivity(reply)
 
-    }
-
-    // Validates name input. Returns whether validation succeeded and either the parsed and normalized
-    // value or a message the bot can use to ask the user again.
-    static validateName(input) {
-        const name = input && input.trim();
-        return name != undefined
-            ? { success: true, name: name }
-            : { success: false, message: 'Please enter a name that contains at least one character.' };
-    };
-
-    // Validates age input. Returns whether validation succeeded and either the parsed and normalized
-    // value or a message the bot can use to ask the user again.
-    static validateAge(input) {
-
-        // Try to recognize the input as a number. This works for responses such as "twelve" as well as "12".
-        try {
-            // Attempt to convert the Recognizer result to an integer. This works for "a dozen", "twelve", "12", and so on.
-            // The recognizer returns a list of potential recognition results, if any.
-            const results = Recognizers.recognizeNumber(input, Recognizers.Culture.English);
-            let output;
-            results.forEach(function (result) {
-                // result.resolution is a dictionary, where the "value" entry contains the processed string.
-                const value = result.resolution['value'];
-                if (value) {
-                    const age = parseInt(value);
-                    if (!isNaN(age) && age >= 18 && age <= 120) {
-                        output = { success: true, age: age };
-                        return;
-                    }
-                }
-            });
-            return output || { success: false, message: 'Please enter an age between 18 and 120.' };
-        } catch (error) {
-            return {
-                success: false,
-                message: "I'm sorry, I could not interpret that as an age. Please enter an age between 18 and 120."
-            };
-        }
-    }
-
-    // Validates date input. Returns whether validation succeeded and either the parsed and normalized
-    // value or a message the bot can use to ask the user again.
-    static validateDate(input) {
-        // Try to recognize the input as a date-time. This works for responses such as "11/14/2018", "today at 9pm", "tomorrow", "Sunday at 5pm", and so on.
-        // The recognizer returns a list of potential recognition results, if any.
-        try {
-            const results = Recognizers.recognizeDateTime(input, Recognizers.Culture.English);
-            const now = new Date();
-            const earliest = now.getTime() + (60 * 60 * 1000);
-            let output;
-            results.forEach(function (result) {
-                // result.resolution is a dictionary, where the "values" entry contains the processed input.
-                result.resolution['values'].forEach(function (resolution) {
-                    // The processed input contains a "value" entry if it is a date-time value, or "start" and
-                    // "end" entries if it is a date-time range.
-                    const datevalue = resolution['value'] || resolution['start'];
-                    // If only time is given, assume it's for today.
-                    const datetime = resolution['type'] === 'time'
-                        ? new Date(`${now.toLocaleDateString()} ${datevalue}`)
-                        : new Date(datevalue);
-                    if (datetime && earliest < datetime.getTime()) {
-                        output = { success: true, date: datetime.toLocaleDateString() };
-                        return;
-                    }
-                });
-            });
-            return output || { success: false, message: "I'm sorry, please enter a date at least an hour out." };
-        } catch (error) {
-            return {
-                success: false,
-                message: "I'm sorry, I could not interpret that as an appropriate date. Please enter a date at least an hour out."
-            };
-        }
     }
 
 }
