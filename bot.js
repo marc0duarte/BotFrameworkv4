@@ -4,6 +4,14 @@
 // const { ActivityTypes } = require('botbuilder');
 const { LuisRecognizer } = require('botbuilder-ai');
 const { ActionTypes, ActivityTypes, CardFactory, AttachmentLayoutTypes } = require('botbuilder');
+const axios = require("axios");
+
+UF_API_KEY= 'https://api.sbif.cl/api-sbifv3/recursos_api/uf?apikey=84a7b1396b178aabf3c912f62059b43a25dbae09&formato=JSON';
+
+//UFDIAS_API_KEY = 'https://api.sbif.cl/api-sbifv3/recursos_api/uf/posteriores/{year}/{month}/dias/{day}?apikey=84a7b1396b178aabf3c912f62059b43a25dbae09&formato=JSON';
+
+UFDIAS_API_KEY = 'https://api.sbif.cl/api-sbifv3/recursos_api/uf/2018/04?apikey=84a7b1396b178aabf3c912f62059b43a25dbae09&formato=JSON';
+
 
 var Memoria = function (_id, _url) {
     this.id = _id,
@@ -66,6 +74,9 @@ class LuisBot {
             }
             else if (topIntent.intent === 'Adjuntar') {
                 await LuisBot.AdjuntarArchivo(turnContext)
+            }
+            else if (topIntent.intent === 'Valoruf') {
+                await LuisBot.ValorUF(turnContext)
             }
             else {
                 // If the top scoring intent was "None" tell the user no valid intents were found and provide help.
@@ -298,6 +309,31 @@ class LuisBot {
         );
     }
 
+    static UFCard(uf,valor,fecha) {
+        return CardFactory.heroCard(
+            'Valor UF : ' + uf ,
+            CardFactory.images(["https://quickchart.io/chart?c={type:'line',data:{labels:["+fecha+"], datasets:[{label:'UF',data:["+valor+"]}]},options:{scales:{Axes:[{ticks:{beginAtZero: true}}]}}}"]),
+            //CardFactory.images(['']),
+            CardFactory.actions([
+                {
+                    type: 'openUrl',
+                    title: 'Mas Indicadores - Sitio SII',
+                    value: 'http://www.sii.cl/valores_y_fechas/index_valores_y_fechas.html'
+                }
+            ])
+    
+        );   
+    }   
+   
+    static  urlHistorico(){
+        var d = new Date(); 
+        d.setDate(d.getDate() - 15); 
+        var year = d.getUTCFullYear();
+        var month = d.getUTCMonth()+1;
+        var day = d.getUTCDate();
+        var URL = UFDIAS_API_KEY.replace('{year}',year).replace('{month}',month).replace('{day}',day);
+        return URL;
+    }
     static async filesAttachment(turnContext) {
         let pdffile = __dirname + '/resources/files/pdf/Q1.pdf'
         let pdf = {
@@ -363,6 +399,39 @@ class LuisBot {
             { type: 'delay', value: 1500 },
             { type: 'message', text: 'Te puedo ayudar en algo más???... 👀 ' }
         ])
+    }
+
+    static async ValorUF(turnContext) {
+
+        await turnContext.sendActivities([
+            { type: 'typing' },
+            { type: 'delay', value: 2000 },
+            { type: 'message', text: 'un momento' }
+        ]);
+
+        try {
+            const response = await axios.get(UF_API_KEY);
+            const res_historico = await axios.get(LuisBot.urlHistorico());
+            const infohist = res_historico.data;
+            var c = '';
+            var valor='';
+            var fecha='';
+            for (let i = 0; i < infohist.UFs.length; i++)
+            {
+              valor +=  c + "'"+infohist.UFs[i].Valor.replace('.','').replace(',','.')+"'";
+              fecha +=  c + "'"+infohist.UFs[i].Fecha+"'";
+              c = ',';
+            }
+            const info = response.data;
+            await context.sendActivity({ 
+                      text: 'Valor de la UF al Dia: '+info.UFs[0].Fecha,
+                      attachments: [ LuisBot.UFCard(info.UFs[0].Valor,valor,fecha)]
+                  }); 
+      //  console.log("https://quickchart.io/chart?c={type:'line',data:{labels:["+fecha+"], datasets:[{label:'UF',data:["+valor+"]}]}}");
+          } catch (error) {
+            console.log(error);
+          }        
+        await LuisBot.MenuOpciones(turnContext);
     }
 
     static async MenuOpciones(turnContext) {
