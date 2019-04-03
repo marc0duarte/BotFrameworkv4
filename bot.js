@@ -317,7 +317,7 @@ class LuisBot {
             CardFactory.actions([
                 {
                     type: 'openUrl',
-                    title: 'Mas Indicadores - Sitio SII',
+                    title: 'Más Indicadores - Sitio SII',
                     value: 'http://www.sii.cl/valores_y_fechas/index_valores_y_fechas.html'
                 }
             ])
